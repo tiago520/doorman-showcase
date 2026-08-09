@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Deploy Doorman with MDM — macOS IT guide</title>
+    <meta
+      name="description"
+      content="The operator guide for preparing, deploying, validating, updating, and removing Doorman on managed Macs."
+    >
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2318201b'/%3E%3Crect x='6.2' y='6.2' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='13.35' y='6.2' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='20.5' y='6.2' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='6.2' y='13.35' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='13.35' y='13.35' width='5.4' height='5.4' rx='1.7' fill='%231e8a55'/%3E%3Crect x='20.5' y='13.35' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='6.2' y='20.5' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='13.35' y='20.5' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3Crect x='20.5' y='20.5' width='5.4' height='5.4' rx='1.7' fill='%23f8f8f4'/%3E%3C/svg%3E"
+    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@800&family=Wix+Madefor+Text:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    >
+    <style>
+      :root {
+        color-scheme: light;
+        --canvas: #edf0eb;
+        --surface: #f8f8f4;
+        --raised: #ffffff;
+        --ink: #18201b;
+        --muted: #68736c;
+        --soft: #8b958e;
+        --line: rgba(24, 32, 27, 0.11);
+        --line-strong: rgba(24, 32, 27, 0.18);
+        --forest: #193d2b;
+        --forest-2: #24563c;
+        --green: #1e8a55;
+        --green-soft: #e8f5ed;
+        --amber: #9f5d10;
+        --amber-soft: #fff3de;
+        --red: #b83b35;
+        --red-soft: #fff0ef;
+        --blue: #2b6288;
+        --blue-soft: #edf6fb;
+        --shadow: 0 18px 55px rgba(27, 42, 32, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 88px;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(
+            circle at 14% 0%,
+            rgba(255, 255, 255, 0.95),
+            transparent 25rem
+          ),
+          linear-gradient(155deg, #f3f5f1 0%, var(--canvas) 55%, #e5eae3 100%);
+        color: var(--ink);
+        font-family:
+          "Wix Madefor Text",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-size: 15px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: var(--forest-2);
+        text-underline-offset: 3px;
+      }
+
+      a:hover {
+        color: var(--green);
+      }
+
+      code,
+      .mono {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.9em;
+      }
+
+      code {
+        padding: 0.12em 0.35em;
+        border-radius: 5px;
+        background: rgba(25, 61, 43, 0.07);
+      }
+
+      .wrap {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        height: 64px;
+        background: rgba(248, 248, 244, 0.88);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(20px) saturate(150%);
+        -webkit-backdrop-filter: blur(20px) saturate(150%);
+      }
+
+      .topbar-in {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .brand svg {
+        display: block;
+      }
+
+      .navlinks {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .navlinks a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+
+      .navlinks .button,
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 15px;
+        border: 1px solid var(--forest);
+        border-radius: 10px;
+        background: var(--forest);
+        color: #eff8f2;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 5px 14px rgba(25, 61, 43, 0.17);
+      }
+
+      .button.secondary {
+        border-color: var(--line-strong);
+        background: var(--raised);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .hero {
+        padding: 86px 0 54px;
+      }
+
+      .eyebrow {
+        margin-bottom: 14px;
+        color: var(--green);
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        margin-top: 0;
+        letter-spacing: -0.025em;
+        line-height: 1.15;
+      }
+
+      h1 {
+        max-width: 920px;
+        margin-bottom: 22px;
+        font-size: clamp(42px, 7vw, 72px);
+        font-weight: 750;
+      }
+
+      h1 em {
+        color: var(--forest-2);
+        font-style: normal;
+      }
+
+      h2 {
+        margin-bottom: 12px;
+        font-size: clamp(28px, 3.6vw, 42px);
+      }
+
+      h3 {
+        margin-bottom: 9px;
+        font-size: 21px;
+      }
+
+      h4 {
+        margin-bottom: 6px;
+        font-size: 15px;
+      }
+
+      p {
+        margin: 0 0 15px;
+      }
+
+      .lede {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 11px;
+        margin-top: 28px;
+      }
+
+      .status-banner {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        margin-top: 38px;
+        padding: 20px 22px;
+        border: 1px solid rgba(159, 93, 16, 0.24);
+        border-radius: 14px;
+        background: var(--amber-soft);
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        margin-top: 7px;
+        border-radius: 50%;
+        background: var(--amber);
+        box-shadow: 0 0 0 5px rgba(159, 93, 16, 0.1);
+      }
+
+      .status-banner strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .status-banner p {
+        margin: 0;
+        color: #6c4c24;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 238px minmax(0, 1fr);
+        gap: 42px;
+        align-items: start;
+        padding-bottom: 100px;
+      }
+
+      .toc {
+        position: sticky;
+        top: 88px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(248, 248, 244, 0.75);
+      }
+
+      .toc-title {
+        margin-bottom: 10px;
+        color: var(--soft);
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .toc a {
+        display: block;
+        padding: 4px 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        text-decoration: none;
+      }
+
+      .toc a:hover {
+        color: var(--green);
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      .section {
+        padding: 58px 0 8px;
+        border-top: 1px solid var(--line);
+      }
+
+      .section:first-child {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .section-intro {
+        max-width: 750px;
+        margin-bottom: 26px;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--raised);
+        box-shadow: 0 3px 14px rgba(27, 42, 32, 0.04);
+      }
+
+      .card p:last-child,
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      .card .kicker {
+        margin-bottom: 8px;
+        color: var(--forest-2);
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .small {
+        font-size: 13px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 25px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .badge.preview {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .badge.blocked {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .badge.info {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .callout {
+        margin: 18px 0;
+        padding: 18px 20px;
+        border-left: 4px solid var(--green);
+        border-radius: 0 12px 12px 0;
+        background: var(--green-soft);
+      }
+
+      .callout.warning {
+        border-left-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .callout.danger {
+        border-left-color: var(--red);
+        background: var(--red-soft);
+      }
+
+      .callout.info {
+        border-left-color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      ul,
+      ol {
+        margin: 10px 0 16px;
+        padding-left: 22px;
+      }
+
+      li {
+        margin: 5px 0;
+      }
+
+      .checklist {
+        padding: 0;
+        list-style: none;
+      }
+
+      .checklist li {
+        position: relative;
+        padding-left: 27px;
+      }
+
+      .checklist li::before {
+        content: "";
+        position: absolute;
+        top: 0.42em;
+        left: 0;
+        width: 14px;
+        height: 14px;
+        border: 1.5px solid var(--green);
+        border-radius: 4px;
+        background: var(--green-soft);
+      }
+
+      .steps {
+        display: grid;
+        gap: 10px;
+        margin: 22px 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: setup;
+      }
+
+      .steps li {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 14px;
+        margin: 0;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--raised);
+        counter-increment: setup;
+      }
+
+      .steps li::before {
+        content: counter(setup);
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border-radius: 9px;
+        background: var(--forest);
+        color: white;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .steps strong {
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin: 20px 0;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--raised);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin: 24px 0;
+      }
+
+      .flow div {
+        position: relative;
+        padding: 16px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--raised);
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .flow div:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        right: -13px;
+        width: 18px;
+        transform: translateY(-50%);
+        color: var(--soft);
+        background: var(--canvas);
+      }
+
+      details {
+        margin: 10px 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--raised);
+      }
+
+      summary {
+        padding: 16px 18px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      details > div {
+        padding: 0 18px 18px;
+        color: var(--muted);
+      }
+
+      .footer {
+        padding: 28px 0 42px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .footer-in {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      :focus-visible {
+        outline: 3px solid rgba(30, 138, 85, 0.35);
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .toc {
+          position: static;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 3px 18px;
+        }
+
+        .toc-title {
+          grid-column: 1 / -1;
+        }
+
+        .grid.three,
+        .flow {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .flow div::after {
+          display: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .wrap {
+          width: min(100% - 28px, 1180px);
+        }
+
+        .navlinks > a:not(.button) {
+          display: none;
+        }
+
+        .hero {
+          padding-top: 58px;
+        }
+
+        .status-banner,
+        .grid.two,
+        .grid.three,
+        .flow,
+        .toc {
+          grid-template-columns: 1fr;
+        }
+
+        .status-dot {
+          display: none;
+        }
+
+        th,
+        td {
+          min-width: 145px;
+        }
+      }
+
+      @media print {
+        .topbar,
+        .toc,
+        .hero-actions {
+          display: none;
+        }
+
+        body {
+          background: white;
+        }
+
+        .layout {
+          display: block;
+        }
+
+        .section {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topbar" aria-label="Main navigation">
+      <div class="wrap topbar-in">
+        <a class="brand" href="../">
+          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#18201b" />
+            <g fill="#f8f8f4">
+              <rect x="6.2" y="6.2" width="5.4" height="5.4" rx="1.7" />
+              <rect x="13.35" y="6.2" width="5.4" height="5.4" rx="1.7" />
+              <rect x="20.5" y="6.2" width="5.4" height="5.4" rx="1.7" />
+              <rect x="6.2" y="13.35" width="5.4" height="5.4" rx="1.7" />
+              <rect x="20.5" y="13.35" width="5.4" height="5.4" rx="1.7" />
+              <rect x="6.2" y="20.5" width="5.4" height="5.4" rx="1.7" />
+              <rect x="13.35" y="20.5" width="5.4" height="5.4" rx="1.7" />
+              <rect x="20.5" y="20.5" width="5.4" height="5.4" rx="1.7" />
+            </g>
+            <rect
+              x="13.35"
+              y="13.35"
+              width="5.4"
+              height="5.4"
+              rx="1.7"
+              fill="#1e8a55"
+            />
+          </svg>
+          <span>doorman <span class="muted">/ MDM guide</span></span>
+        </a>
+        <div class="navlinks">
+          <a href="../#/docs">Docs</a>
+          <a href="../desktop/">macOS app</a>
+          <a class="button" href="../#/fleet/mdm">Explore the fleet console</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="wrap hero">
+      <div class="eyebrow">
+        macOS · IT administrator guide · updated August 9, 2026
+      </div>
+      <h1>Deploy Doorman with MDM, <em>without breaking the Mac.</em></h1>
+      <p class="lede">
+        Prepare, pilot, deploy, operate, update, and remove Doorman across a
+        managed macOS fleet. The design is portable across capable Apple MDMs:
+        one signed package, standard Apple profiles, per-device identity, staged
+        rollout, and proof that traffic really works.
+      </p>
+      <div class="hero-actions">
+        <a class="button" href="#deployment"
+          >Start with the deployment sequence</a
+        >
+        <a class="button secondary" href="#daily-use"
+          >See daily IT operations</a
+        >
+      </div>
+      <div class="status-banner" role="status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong
+            >Managed deployment is a design preview, not a production-ready
+            download.</strong
+          >
+          <p>
+            The current macOS download is an interactive internal preview. Do
+            not distribute the current generated MDM bundle: secure headless
+            per-device enrollment (TIA-7685), signed release artifacts, trust
+            validation, and real-tenant MDM tests must pass first. You can use
+            this guide now to prepare Apple Business Manager, MDM groups,
+            policies, network tests, and a pilot plan.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap layout">
+      <aside class="toc" aria-label="On this page">
+        <div class="toc-title">On this page</div>
+        <a href="#readiness">Readiness and scope</a>
+        <a href="#tiers">Enrollment tiers</a>
+        <a href="#prerequisites">Prerequisites</a>
+        <a href="#artifacts">Deployment bundle</a>
+        <a href="#deployment">Deployment sequence</a>
+        <a href="#vendors">MDM-specific setup</a>
+        <a href="#network">Certificates and network</a>
+        <a href="#validation">Pilot validation</a>
+        <a href="#daily-use">Use the fleet console</a>
+        <a href="#lifecycle">Updates and removal</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#security">Security controls</a>
+        <a href="#references">Official references</a>
+      </aside>
+
+      <main>
+        <section class="section" id="readiness">
+          <div class="eyebrow">1 · Read this first</div>
+          <h2>Know what is real, planned, and blocked.</h2>
+          <p class="section-intro">
+            An MDM saying “package installed” is not the same as a protected
+            endpoint. Doorman only calls a Mac <strong>Protected</strong> after
+            the required components and a recent end-to-end canary have passed.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  <th>Status</th>
+                  <th>What IT should do</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Interactive macOS preview</td>
+                  <td><span class="badge preview">Preview</span></td>
+                  <td>
+                    Use only on test Macs. It is not the managed enterprise
+                    package.
+                  </td>
+                </tr>
+                <tr>
+                  <td>MDM fleet console concept</td>
+                  <td><span class="badge info">Interactive demo</span></td>
+                  <td>
+                    Evaluate workflows and state definitions with sample data.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Secure zero-touch enrollment</td>
+                  <td><span class="badge blocked">Blocked · TIA-7685</span></td>
+                  <td>
+                    Do not ship an organization token in a profile, package,
+                    script, or plist.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Signed/notarized universal MDM package</td>
+                  <td><span class="badge preview">Planned</span></td>
+                  <td>
+                    Wait for a release explicitly labeled for managed
+                    deployment.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Certificate and proxy topology</td>
+                  <td><span class="badge preview">Phase-0 validation</span></td>
+                  <td>
+                    Inventory SWG, VPN, EDR, PAC, and existing proxy controls
+                    now.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Vendor support</td>
+                  <td><span class="badge preview">Validation pending</span></td>
+                  <td>
+                    Use Verified, Guided, and Unverified evidence per
+                    product/version/plan.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout danger">
+            <strong>Never put these in fleet-wide artifacts.</strong>
+            <p>
+              A long-lived organization bearer token, a shared endpoint CA
+              private key, provider API keys, or reusable device bootstrap
+              secrets. A configuration profile should carry only non-secret
+              desired state. Each Mac must obtain its own revocable identity.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="tiers">
+          <div class="eyebrow">2 · Pick the honest enrollment tier</div>
+          <h2>“Zero-touch” applies to organization-owned ADE Macs.</h2>
+          <p class="section-intro">
+            Choose the tier before creating profiles. The available Apple
+            payloads and the employee experience differ by enrollment type.
+          </p>
+
+          <div class="grid two">
+            <article class="card">
+              <div class="kicker">Tier A · Recommended</div>
+              <h3>Automated Device Enrollment</h3>
+              <p class="muted">
+                Organization-owned, supervised Macs assigned through Apple
+                Business Manager. Target experience: Doorman installs after
+                enrollment with no employee setup or certificate prompt.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Tier B</div>
+              <h3>Device Enrollment</h3>
+              <p class="muted">
+                A user completes the Mac’s MDM enrollment once. After that, the
+                MDM can deliver the managed package and device-channel profiles.
+                Describe this as “silent after enrollment,” not zero-touch.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Tier C</div>
+              <h3>User Enrollment / BYOD</h3>
+              <p class="muted">
+                Privacy-preserving limited management. Default to tool-native
+                gateway configuration. Do not promise a system extension or
+                device-wide interception on a personally owned Mac.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Tier D</div>
+              <h3>Unmanaged Mac</h3>
+              <p class="muted">
+                Use the interactive app and app-owned updater. macOS consent and
+                trust prompts remain visible; Doorman must not try to bypass
+                them.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="prerequisites">
+          <div class="eyebrow">3 · Prerequisites</div>
+          <h2>Prepare Apple, Doorman, and the network.</h2>
+
+          <div class="grid three">
+            <article class="card">
+              <div class="kicker">Apple</div>
+              <h3>Enrollment foundation</h3>
+              <ul class="checklist small">
+                <li>Apple Business Manager is linked to the MDM.</li>
+                <li>Test Macs are assigned to the correct MDM server.</li>
+                <li>ADE enrollment is confirmed on a wiped pilot Mac.</li>
+                <li>FileVault and standard-user behavior are represented.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="kicker">Doorman</div>
+              <h3>Organization decisions</h3>
+              <ul class="checklist small">
+                <li>Managed Visible or Managed Quiet is selected.</li>
+                <li>Support URL and escalation owner are defined.</li>
+                <li>Canary, early, and broad rollout groups exist.</li>
+                <li>
+                  Passthrough expiry and stale/offline thresholds are approved.
+                </li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="kicker">Network</div>
+              <h3>Coexistence inventory</h3>
+              <ul class="checklist small">
+                <li>
+                  Corporate proxy, PAC, SWG, VPN, EDR, and DNS controls are
+                  listed.
+                </li>
+                <li>Required gateway and release hosts are allowed.</li>
+                <li>
+                  Captive portal and off-network cases are in the test plan.
+                </li>
+                <li>
+                  The original proxy state is recorded for safe restoration.
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout warning">
+            <strong>Use a real pilot, not only a lab VM.</strong>
+            <p>
+              Include Apple silicon and Intel where still supported, standard
+              users, FileVault, sleep/wake, reboot, office and home networks,
+              and the same security agents your employees actually run.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="artifacts">
+          <div class="eyebrow">4 · Deployment bundle</div>
+          <h2>Every capable MDM receives the same portable artifacts.</h2>
+          <p class="section-intro">
+            A vendor connector may automate upload and assignment later; it must
+            not change the endpoint security model. Download only a release
+            bundle explicitly marked
+            <strong>MDM Verified</strong> for your vendor/version/plan.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Artifact</th>
+                  <th>Purpose</th>
+                  <th>Required evidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Universal product-archive PKG</td>
+                  <td>
+                    Installs the app and its managed service for arm64 and
+                    x86_64.
+                  </td>
+                  <td>
+                    Developer ID signature, notarization, versioned receipt,
+                    SHA-256.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Managed preferences profile</td>
+                  <td>
+                    Non-secret org ID, gateway list, mode, policy channel, ring,
+                    and support URL.
+                  </td>
+                  <td>
+                    Schema version, precedence rules, required/optional field
+                    behavior.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Identity/trust profile</td>
+                  <td>
+                    ACME/SCEP or approved public trust material; no private CA
+                    key.
+                  </td>
+                  <td>
+                    Rotation, overlap, expiry, revocation, and offline behavior
+                    tested.
+                  </td>
+                </tr>
+                <tr>
+                  <td>System extension profile</td>
+                  <td>
+                    Preapproves a signed extension only if the validated
+                    architecture uses one.
+                  </td>
+                  <td>
+                    Exact team ID, bundle ID, extension type, and supported
+                    enrollment tiers.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Managed login/background items</td>
+                  <td>
+                    Keeps the approved service available across reboot and
+                    login.
+                  </td>
+                  <td>
+                    Publisher and item identifiers match the signed release.
+                  </td>
+                </tr>
+                <tr>
+                  <td>PPPC profile</td>
+                  <td>
+                    Grants only permissions proven necessary by the release.
+                  </td>
+                  <td>No broad speculative permissions.</td>
+                </tr>
+                <tr>
+                  <td>Readiness check</td>
+                  <td>
+                    Reports installed, configured, reachable, conflict-free, and
+                    canary results.
+                  </td>
+                  <td>
+                    Redacted output; delivery receipt alone cannot return
+                    Protected.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Rollback/uninstall artifact</td>
+                  <td>
+                    Restores networking, revokes identity, and removes Doorman
+                    in safe order.
+                  </td>
+                  <td>Forced-failure and interrupted-removal tests pass.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout info">
+            <strong
+              >Managed configuration is desired state, not a secret
+              store.</strong
+            >
+            <p>
+              It may identify the organization and gateways, but enrollment must
+              exchange a one-use, device-bound challenge for a unique device
+              credential. Unsupported required schema fields keep the
+              last-known-good configuration and surface Attention; optional
+              unknown fields are ignored and reported.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="deployment">
+          <div class="eyebrow">5 · Safe deployment sequence</div>
+          <h2>Install trust before the app. Enable routing last.</h2>
+          <p class="section-intro">
+            Keep all pilot Macs in passthrough until observed state matches
+            desired state and the end-to-end check succeeds.
+          </p>
+
+          <ol class="steps">
+            <li>
+              <div>
+                <strong>Enroll the Mac.</strong>
+                Confirm ADE or Device Enrollment, supervision/management state,
+                assigned user, MDM check-in, and the intended rollout group.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Deliver device identity and public trust.</strong>
+                Use the approved ACME/SCEP or one-use bootstrap design. Never
+                install a shared endpoint signing private key.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Deliver managed preferences.</strong>
+                Set organization, gateways, endpoint visibility, fail-open
+                policy, support URL, policy channel, and rollout ring. Keep
+                credentials out of the profile.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Preapprove only required Apple controls.</strong>
+                Assign the release-matched system extension, PPPC, and
+                background-item profiles. Preapproval does not install or
+                activate the app by itself.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Install the signed and notarized PKG.</strong>
+                Pin the approved version and checksum. The service starts in
+                passthrough and records the original network/proxy state.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Complete per-device enrollment.</strong>
+                Exchange a short-lived, device-bound challenge for a unique
+                revocable identity stored with restrictive System Keychain
+                access.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Evaluate readiness.</strong>
+                Verify package receipt and signature, config schema, identity,
+                trust chain, service or extension, gateway reachability, foreign
+                network controls, and a real canary request.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Enable the route for the canary ring.</strong>
+                Doorman may enforce only after all required checks pass. Pause
+                automatically when crash, protection, network-conflict, or
+                canary thresholds regress.
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>Bake, then expand.</strong>
+                Move from canary to early and broad groups only after the
+                defined bake window. Keep a tested rollback release available
+                throughout.
+              </div>
+            </li>
+          </ol>
+
+          <div class="flow" role="img" aria-label="Deployment evidence flow">
+            <div>Desired</div>
+            <div>Delivered</div>
+            <div>Installed</div>
+            <div>Ready</div>
+            <div>Protected</div>
+          </div>
+          <p class="small muted">
+            These states are deliberately separate. “Delivered,” “installed,”
+            and Apple declarative management status are evidence, but only
+            Doorman’s fresh end-to-end verification can produce Protected.
+          </p>
+        </section>
+
+        <section class="section" id="vendors">
+          <div class="eyebrow">6 · MDM-specific setup</div>
+          <h2>Map the same sequence into your MDM.</h2>
+          <p class="section-intro">
+            Product menus and plan capabilities change. Follow your vendor’s
+            current documentation, record the exact product/version/plan tested,
+            and treat the Doorman support label as evidence—not marketing
+            shorthand.
+          </p>
+
+          <details open>
+            <summary>Generic Apple MDM baseline</summary>
+            <div>
+              <ol>
+                <li>Create canary, early, broad, and rollback scopes.</li>
+                <li>Upload the signed PKG without repackaging it.</li>
+                <li>
+                  Upload the release-matched identity/trust, managed preference,
+                  background item, and conditional extension/PPPC profiles.
+                </li>
+                <li>
+                  Assign profiles in the safe sequence, then the PKG, to the
+                  canary scope.
+                </li>
+                <li>
+                  Run the readiness inventory check and reconcile its result
+                  with the Doorman Devices view.
+                </li>
+                <li>
+                  Enable routing only for devices that are Ready; bake and
+                  expand by ring.
+                </li>
+              </ol>
+              <p>
+                Minimum capability: ADE or Device Enrollment, signed custom PKG
+                deployment, custom Apple configuration profiles, certificate
+                payloads, managed background items, and device inventory/status.
+                API automation is optional.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Jamf Pro</summary>
+            <div>
+              <ol>
+                <li>
+                  Add the product-archive PKG to the approved distribution
+                  point.
+                </li>
+                <li>
+                  Create separate computer configuration profiles for
+                  trust/identity, managed preferences, background items, and any
+                  validated extension/PPPC payload.
+                </li>
+                <li>
+                  Use static or smart groups for canary, early, broad,
+                  Attention, and rollback populations.
+                </li>
+                <li>
+                  Deploy profiles before the installation policy. Use the
+                  release receipt and readiness extension attribute for
+                  detection.
+                </li>
+                <li>
+                  Do not infer Protected from policy logs or a package receipt;
+                  reconcile the Doorman canary timestamp.
+                </li>
+              </ol>
+              <p>
+                Direct API automation is a candidate only after least-privilege
+                credentials, package distribution, configuration profile
+                behavior, rate limits, and the exact Jamf version are validated.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Microsoft Intune</summary>
+            <div>
+              <ol>
+                <li>
+                  Add the signed installer as an unmanaged macOS PKG app and
+                  configure release-specific detection.
+                </li>
+                <li>
+                  Deploy Apple configuration profiles through the supported
+                  custom/settings catalog paths.
+                </li>
+                <li>
+                  Use Entra/Intune assignment groups for canary, early, broad,
+                  and rollback rings.
+                </li>
+                <li>
+                  Assign required profiles before the app; account for Intune
+                  reporting and check-in latency during bake decisions.
+                </li>
+                <li>
+                  Compare Intune installation status with Doorman readiness and
+                  canary evidence before expanding.
+                </li>
+              </ol>
+              <p>
+                Confirm package structure and detection requirements against the
+                current Intune documentation. “Installed” in Intune remains
+                delivery evidence, not protection proof.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Kandji</summary>
+            <div>
+              <ol>
+                <li>
+                  Add the signed PKG as a Custom App and define an auditable
+                  rule for installation state.
+                </li>
+                <li>
+                  Add each Apple profile as a Custom Profile, keeping
+                  identity/trust separate from policy.
+                </li>
+                <li>
+                  Map canary, early, broad, and rollback to Assignment Maps or
+                  Blueprints.
+                </li>
+                <li>
+                  Assign profiles first, then the Custom App. Keep the first
+                  cohort in passthrough until readiness passes.
+                </li>
+                <li>
+                  Display Kandji agent action state separately from Apple MDM
+                  state and Doorman protection state.
+                </li>
+              </ol>
+              <p>
+                A connector is optional; the portable artifact path remains the
+                security baseline.
+              </p>
+            </div>
+          </details>
+
+          <details>
+            <summary>
+              Mosyle, Addigy, SimpleMDM, JumpCloud, Fleet, Workspace ONE, and
+              others
+            </summary>
+            <div>
+              <p>
+                Use the generic sequence with the vendor’s custom PKG, custom
+                profile, assignment group/policy/blueprint, and inventory
+                mechanisms. Until a named product/version/plan passes the
+                complete real-tenant matrix, label it <strong>Guided</strong> or
+                <strong>Unverified</strong>, never Verified.
+              </p>
+              <ul>
+                <li>
+                  <strong>Verified:</strong> full install, trust, readiness,
+                  update, rollback, uninstall, offline recovery, and status
+                  reconciliation passed in a real tenant on a recorded date.
+                </li>
+                <li>
+                  <strong>Guided:</strong> official artifacts and mapped steps
+                  exist, but the full matrix has not passed.
+                </li>
+                <li>
+                  <strong>Unverified:</strong> registry entry only; no
+                  compatibility promise.
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Platform</th>
+                  <th>Package path</th>
+                  <th>Profile and scope mapping</th>
+                  <th>Initial label</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Mosyle</td>
+                  <td>Custom PKG</td>
+                  <td>Custom Apple profiles and device/user groups</td>
+                  <td>Guided until the customer plan and API surface pass</td>
+                </tr>
+                <tr>
+                  <td>Addigy</td>
+                  <td>Smart Software</td>
+                  <td>Profiles, policies, and device facts mapped to rings</td>
+                  <td>Guided; connector candidate</td>
+                </tr>
+                <tr>
+                  <td>SimpleMDM</td>
+                  <td>Custom app</td>
+                  <td>Custom profiles and assignment groups</td>
+                  <td>Guided; API candidate after scope validation</td>
+                </tr>
+                <tr>
+                  <td>JumpCloud</td>
+                  <td>Private Repository PKG</td>
+                  <td>macOS policies/custom profiles and device groups</td>
+                  <td>Guided</td>
+                </tr>
+                <tr>
+                  <td>Fleet</td>
+                  <td>Software package or GitOps YAML</td>
+                  <td>Apple profiles, policies, teams, and GitOps ownership</td>
+                  <td>Guided; connector candidate</td>
+                </tr>
+                <tr>
+                  <td>Workspace ONE UEM</td>
+                  <td>Internal App PKG</td>
+                  <td>Device/custom profiles and Smart Groups</td>
+                  <td>Guided; validate check-in/reporting latency</td>
+                </tr>
+                <tr>
+                  <td>Hexnode UEM</td>
+                  <td>Enterprise app/PKG</td>
+                  <td>Custom configuration policy and groups</td>
+                  <td>Guided</td>
+                </tr>
+                <tr>
+                  <td>ManageEngine Endpoint Central / MDM Plus</td>
+                  <td>App repository or package deployment</td>
+                  <td>macOS/custom profiles and groups</td>
+                  <td>Guided; record cloud/on-prem edition</td>
+                </tr>
+                <tr>
+                  <td>Cisco Meraki Systems Manager</td>
+                  <td>Custom macOS app/PKG</td>
+                  <td>Custom Apple profiles and tags</td>
+                  <td>Guided; use Doorman's uninstall artifact</td>
+                </tr>
+                <tr>
+                  <td>Apple Business Essentials</td>
+                  <td>Signed package</td>
+                  <td>Custom Settings and Collections</td>
+                  <td>Guided artifact path; no connector assumption</td>
+                </tr>
+                <tr>
+                  <td>Rippling, NinjaOne, Ivanti, MaaS360, BlackBerry, Scalefusion, and others</td>
+                  <td>Vendor custom-package mechanism</td>
+                  <td>Generic Apple profiles and vendor scopes</td>
+                  <td>Unverified until the full real-tenant matrix passes</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="network">
+          <div class="eyebrow">7 · Certificates, proxy, VPN, and EDR</div>
+          <h2>Unknown network topology means passthrough.</h2>
+          <p class="section-intro">
+            The endpoint must never leave macOS pointing at a dead local proxy.
+            It must also never overwrite an existing corporate proxy, PAC, SWG,
+            VPN, EDR network component, or Global HTTP Proxy without an
+            explicitly validated coexistence mode.
+          </p>
+
+          <div class="grid two">
+            <article class="card">
+              <div class="kicker">Certificate rules</div>
+              <h3>Unique, short-lived, revocable</h3>
+              <ul>
+                <li>Install public trust material through the MDM.</li>
+                <li>
+                  Use ACME/SCEP or a one-use device-bound bootstrap for
+                  identity.
+                </li>
+                <li>
+                  Keep private keys out of packages, profiles, logs, and
+                  diagnostics.
+                </li>
+                <li>
+                  Rotate with an overlap window; test expiry, revocation,
+                  reboot, and offline behavior.
+                </li>
+                <li>
+                  If safe signing cannot be proved, use tool-native routing
+                  without interception.
+                </li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="kicker">Routing outcomes</div>
+              <h3>Four explicit states</h3>
+              <ul>
+                <li>
+                  <strong>Supported:</strong> direct or validated owned route.
+                </li>
+                <li>
+                  <strong>Chained:</strong> Doorman safely preserves and uses
+                  the corporate upstream proxy.
+                </li>
+                <li>
+                  <strong>Passthrough-only:</strong> endpoint remains healthy
+                  but Doorman does not intercept.
+                </li>
+                <li>
+                  <strong>Unsupported:</strong> do not enable the endpoint
+                  route; use cloud/tool-native deployment.
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout warning">
+            <strong>Offline expiry must preserve the network.</strong>
+            <p>
+              If a signer or device identity expires while a Mac cannot reach
+              Doorman, the endpoint restores or preserves the original route and
+              reports Stale/Attention. It must never keep interception active
+              with invalid trust, report Protected, or block normal traffic.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="validation">
+          <div class="eyebrow">8 · Pilot and production gates</div>
+          <h2>Prove safe recovery before scaling.</h2>
+
+          <div class="grid two">
+            <article class="card">
+              <div class="kicker">Per-device readiness</div>
+              <ul class="checklist">
+                <li>
+                  Expected package receipt, code signature, notarization, and
+                  checksum.
+                </li>
+                <li>
+                  Managed config schema is supported and effective values match
+                  policy.
+                </li>
+                <li>
+                  Unique device identity and required trust chain are valid.
+                </li>
+                <li>
+                  Service/extension is healthy after login, reboot, and
+                  sleep/wake.
+                </li>
+                <li>Gateway and upstream AI provider are reachable.</li>
+                <li>
+                  Foreign proxy/VPN/security state maps to an approved outcome.
+                </li>
+                <li>
+                  A recent end-to-end canary passed through the effective route.
+                </li>
+              </ul>
+            </article>
+            <article class="card">
+              <div class="kicker">Fleet GA gate</div>
+              <ul class="checklist">
+                <li>
+                  Every forced failure and uninstall test restores networking.
+                </li>
+                <li>ADE pilot requires no employee setup interaction.</li>
+                <li>
+                  Artifact/log scans find no fleet bearer secret or shared CA
+                  private key.
+                </li>
+                <li>
+                  Staged rollout halts automatically under injected regression.
+                </li>
+                <li>
+                  Rollback succeeds from each supported release and macOS
+                  version.
+                </li>
+                <li>
+                  Generic Apple MDM plus Jamf, Intune, Kandji, and one more real
+                  tenant pass.
+                </li>
+                <li>
+                  RBAC, audit, privacy, accessibility, and incident runbooks are
+                  approved.
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <p class="small muted">
+            Test current supported macOS plus the next beta, Apple silicon and
+            supported Intel, standard/admin users, FileVault, multiple users,
+            login/logout/reboot, direct/PAC/proxy, VPN/EDR, captive portal,
+            offline, gateway outage, package downgrade, profile removal,
+            certificate rotation/expiry/revocation, and interrupted uninstall.
+          </p>
+        </section>
+
+        <section class="section" id="daily-use">
+          <div class="eyebrow">9 · Daily IT operations</div>
+          <h2>Operate the fleet from evidence, not queued commands.</h2>
+          <p class="section-intro">
+            The current console is an interactive sample-data prototype. It
+            defines the intended workflows while the durable gateway control
+            plane and endpoint artifacts are built.
+          </p>
+
+          <div class="grid three">
+            <article class="card">
+              <div class="kicker">Start here</div>
+              <h3><a href="../#/fleet/mdm">Managed fleet</a></h3>
+              <p class="muted">
+                Review enrolled, Protected, Attention, stale, certificates
+                expiring, network conflicts, connector freshness, and rollout
+                progress. Every total should open the corresponding device list.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Investigate</div>
+              <h3><a href="../#/fleet/devices">Devices</a></h3>
+              <p class="muted">
+                Compare desired, delivered, observed, and effective state. Check
+                last seen separately from last verified. Use redacted
+                diagnostics and an explicit support owner.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Change safely</div>
+              <h3><a href="../#/fleet/deploy">Deployment wizard</a></h3>
+              <p class="muted">
+                Upload/verify artifacts, choose enrollment tier and endpoint
+                mode, map scopes, start with canary, define bake gates, and keep
+                rollback available.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Trust</div>
+              <h3><a href="../#/fleet/trust">Certificates &amp; network</a></h3>
+              <p class="muted">
+                Watch identity expiry, trust rotation, gateway reachability,
+                proxy ownership, and coexistence conflicts. Never repair by
+                silently replacing a foreign route.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Status language</div>
+              <h3>Protected has a deadline</h3>
+              <p class="muted">
+                Protected requires a fresh canary under the current policy.
+                Protected—Passthrough is healthy but intentionally bypassed.
+                Stale means proof is older than policy allows.
+              </p>
+            </article>
+            <article class="card">
+              <div class="kicker">Remote actions</div>
+              <h3>Typed and auditable only</h3>
+              <p class="muted">
+                Recheck, collect redacted diagnostics, enter/exit passthrough,
+                rotate identity, quarantine, and prepare uninstall. No arbitrary
+                remote shell. Every action is scoped, signed, expiring,
+                replay-protected, and recorded.
+              </p>
+            </article>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Meaning</th>
+                  <th>Operator response</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Protected</td>
+                  <td>Current policy plus recent end-to-end verification.</td>
+                  <td>No action; monitor freshness.</td>
+                </tr>
+                <tr>
+                  <td>Protected — Passthrough</td>
+                  <td>Endpoint healthy; enforcement intentionally bypassed.</td>
+                  <td>Confirm owner, reason, and automatic expiry.</td>
+                </tr>
+                <tr>
+                  <td>Provisioning</td>
+                  <td>Expected deployment steps are still running.</td>
+                  <td>Compare MDM delivery and endpoint observed state.</td>
+                </tr>
+                <tr>
+                  <td>Attention</td>
+                  <td>Recoverable mismatch or failure.</td>
+                  <td>
+                    Follow the recommended safe action; do not force routing.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Stale</td>
+                  <td>Health/canary evidence is too old.</td>
+                  <td>Recheck; confirm device/network availability.</td>
+                </tr>
+                <tr>
+                  <td>Offline</td>
+                  <td>Heartbeat exceeded the offline threshold.</td>
+                  <td>
+                    Wait or contact the owner; do not claim current protection.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Quarantined</td>
+                  <td>Identity revoked or explicit security isolation.</td>
+                  <td>Review incident owner and re-enrollment approval.</td>
+                </tr>
+                <tr>
+                  <td>Uninstalling / Removed</td>
+                  <td>Lifecycle workflow is active or complete.</td>
+                  <td>Verify original networking and identity revocation.</td>
+                </tr>
+                <tr>
+                  <td>Unknown</td>
+                  <td>Evidence cannot be reconciled.</td>
+                  <td>Keep passthrough; collect redacted diagnostics.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="lifecycle">
+          <div class="eyebrow">10 · Updates, rollback, and uninstall</div>
+          <h2>MDM owns the binary lifecycle on managed Macs.</h2>
+          <p class="section-intro">
+            Doorman owns readiness, safe route preparation, and actual-result
+            reporting. It must not compete with the MDM’s package update or
+            removal workflow.
+          </p>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>Update by ring</h3>
+              <ol>
+                <li>
+                  Verify release signature, notarization, checksum, schema, and
+                  rollback compatibility.
+                </li>
+                <li>
+                  Put eligible canary Macs into passthrough if the release
+                  requires route/service mutation.
+                </li>
+                <li>
+                  Assign the package and release-matched profiles through the
+                  MDM.
+                </li>
+                <li>
+                  Wait for installed, ready, and Protected as separate
+                  milestones.
+                </li>
+                <li>Honor bake gates before early and broad expansion.</li>
+              </ol>
+            </article>
+            <article class="card">
+              <h3>When a desktop release is needed</h3>
+              <p class="muted">
+                Native macOS/API security changes, Electron/runtime security
+                fixes, entitlements, installer/service changes, trust/key
+                algorithm changes, a required managed-config capability, a new
+                native traffic mechanism, incompatible telemetry, or a security
+                incident requiring binary replacement.
+              </p>
+              <p class="muted">
+                New AI models/providers, pricing, routing policy, gateway
+                failover order, certificate rotation, and existing policy fields
+                are gateway/config changes—not desktop releases.
+              </p>
+            </article>
+          </div>
+
+          <div class="callout danger">
+            <strong>Safe removal order is not optional.</strong>
+            <ol>
+              <li>Enter passthrough and restore the original network route.</li>
+              <li>
+                Verify normal network and AI-tool connectivity without Doorman
+                enforcement.
+              </li>
+              <li>Revoke the device identity and any per-device signer.</li>
+              <li>
+                Use MDM to remove the app/service with the approved uninstall
+                artifact.
+              </li>
+              <li>Remove Doorman profiles and public trust last.</li>
+            </ol>
+            <p>
+              If removal is interrupted, the endpoint remains or returns to
+              passthrough. Profile removal must never strand a Mac behind an
+              owned localhost proxy.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="troubleshooting">
+          <div class="eyebrow">11 · Troubleshooting</div>
+          <h2>Restore connectivity first, then repair protection.</h2>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symptom</th>
+                  <th>Check</th>
+                  <th>Safe response</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Package says installed, device is Provisioning</td>
+                  <td>
+                    Managed config, unique identity, service, gateway, canary,
+                    and profile assignment order.
+                  </td>
+                  <td>
+                    Keep passthrough; repair the missing prerequisite and
+                    recheck.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Certificate is untrusted or expiring</td>
+                  <td>
+                    MDM profile scope, chain, key usage, expiry window, last
+                    successful rotation.
+                  </td>
+                  <td>
+                    Rotate with overlap. If safe trust is unavailable, disable
+                    interception.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Gateway cannot be reached</td>
+                  <td>
+                    DNS, firewall, proxy authentication, captive portal,
+                    regional endpoint, system time.
+                  </td>
+                  <td>
+                    Restore/preserve original route and report Attention; never
+                    dead-end traffic.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Corporate proxy/PAC changed</td>
+                  <td>
+                    Desired versus observed proxy owner and the compatibility
+                    registry entry.
+                  </td>
+                  <td>
+                    Use validated chaining or passthrough/tool-native mode. Do
+                    not overwrite it.
+                  </td>
+                </tr>
+                <tr>
+                  <td>VPN or EDR causes a conflict</td>
+                  <td>
+                    Exact products, versions, extension types, activation order,
+                    on/off network behavior.
+                  </td>
+                  <td>
+                    Move the affected scope to passthrough and use
+                    cloud/tool-native routing until validated.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Device is Stale but online</td>
+                  <td>
+                    Last heartbeat versus last verified, policy version, canary
+                    error, system sleep.
+                  </td>
+                  <td>Run a typed recheck; do not manually mark Protected.</td>
+                </tr>
+                <tr>
+                  <td>Update stalls or regresses</td>
+                  <td>
+                    Ring, MDM delivery result, installed version, readiness,
+                    crash/network thresholds.
+                  </td>
+                  <td>
+                    Pause rollout, place the cohort in passthrough, and assign
+                    the tested rollback release.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Uninstall is incomplete</td>
+                  <td>
+                    Original route restored, identity revoked, app receipt,
+                    service, profiles, trust.
+                  </td>
+                  <td>
+                    Finish the ordered workflow; networking must be restored
+                    before trust removal.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout info">
+            <strong>Diagnostics are redacted by default.</strong>
+            <p>
+              Collect versions, timestamps, policy/config hashes, certificate
+              fingerprints and expiry, route ownership, reachability, and
+              normalized errors. Do not collect prompts, response content,
+              provider keys, private keys, raw bearer tokens, or full personal
+              network history in routine endpoint diagnostics.
+            </p>
+          </div>
+        </section>
+
+        <section class="section" id="security">
+          <div class="eyebrow">12 · Security and privacy contract</div>
+          <h2>Managed and quiet never means covert.</h2>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>Required controls</h3>
+              <ul>
+                <li>Per-device, revocable identity with bounded lifetime.</li>
+                <li>
+                  Least-privilege, write-only encrypted MDM connector
+                  credentials.
+                </li>
+                <li>
+                  Typed, allowlisted, signed, expiring, replay-protected remote
+                  actions.
+                </li>
+                <li>
+                  Organization isolation, RBAC, destructive-action confirmation,
+                  and audit.
+                </li>
+                <li>
+                  Desired, delivered, observed, and effective state stored
+                  separately.
+                </li>
+                <li>
+                  Fail-open behavior with bounded, visible passthrough
+                  ownership.
+                </li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Explicit non-goals</h3>
+              <ul>
+                <li>No stealth install on unmanaged or personal Macs.</li>
+                <li>
+                  No bypass of Apple consent outside supervised/MDM-authorized
+                  controls.
+                </li>
+                <li>
+                  No arbitrary remote shell or hidden employee surveillance.
+                </li>
+                <li>No routine prompt/content capture in health telemetry.</li>
+                <li>
+                  No claim that every MDM exposes the same API or capability.
+                </li>
+                <li>
+                  No new desktop build merely to recognize a new AI model.
+                </li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="references">
+          <div class="eyebrow">13 · Official references</div>
+          <h2>Apple and vendor documentation.</h2>
+          <p class="section-intro">
+            Recheck these sources for the OS and MDM version you deploy. Vendor
+            menus, package requirements, and supported payloads change over
+            time.
+          </p>
+
+          <div class="grid two">
+            <article class="card small">
+              <h3>Apple platform</h3>
+              <ul>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/enrollment-methods-for-apple-devices-dep08f54fcf6/1/web/1.0"
+                    >Enrollment methods</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/automated-device-enrollment-management-dep73069dd57/1/web/1.0"
+                    >Automated Device Enrollment</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/device-enrollment-and-device-management-depd1c27dfe6/web"
+                    >Device Enrollment</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/user-enrollment-and-device-management-dep23db2037d/web"
+                    >User Enrollment</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/distribute-certificates-depcdc9a6a3f/web"
+                    >Distribute certificates</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://developer.apple.com/documentation/devicemanagement/managedpreferences"
+                    >Managed preferences</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://developer.apple.com/documentation/devicemanagement/systemextensions"
+                    >System extensions payload</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/managed-login-items-payload-settings-dep07b92494/web"
+                    >Managed login and background items</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/guide/deployment/distribute-packages-to-mac-computers-dep873c25ac4/web"
+                    >Distribute macOS packages</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://developer.apple.com/documentation/devicemanagement/processing-status-for-managed-apps"
+                    >Declarative managed app status</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://developer.apple.com/documentation/technotes/tn3134-network-extension-provider-deployment"
+                    >Network Extension deployment</a
+                  >
+                </li>
+              </ul>
+            </article>
+            <article class="card small">
+              <h3>MDM vendors</h3>
+              <ul>
+                <li>
+                  <a
+                    href="https://learn.jamf.com/r/en-US/jamf-pro-documentation-11.22.0/Package_Deployment"
+                    >Jamf package deployment</a
+                  >
+                  and
+                  <a
+                    href="https://learn.jamf.com/r/en-US/jamf-pro-documentation-current/Manually_Creating_a_Configuration_Profile_macOS"
+                    >configuration profiles</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://learn.microsoft.com/en-us/intune/app-management/deployment/add-unmanaged-pkg-macos"
+                    >Intune unmanaged macOS PKG</a
+                  >
+                  and
+                  <a
+                    href="https://learn.microsoft.com/en-us/intune/fundamentals/platform-guide-macos"
+                    >macOS management guide</a
+                  >
+                </li>
+                <li>
+                  <a href="https://support.kandji.io/kb/custom-apps-overview"
+                    >Kandji Custom Apps</a
+                  >
+                  and
+                  <a
+                    href="https://support.kandji.io/kb/custom-profiles-overview"
+                    >Custom Profiles</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.addigy.com/hc/en-us/articles/4405448153235-How-To-Create-Smart-Software-Items-pkg-files"
+                    >Addigy Smart Software</a
+                  >
+                </li>
+                <li>
+                  <a href="https://simplemdm.com/features/api/"
+                    >SimpleMDM API</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://jumpcloud.com/support/manage-software-with-jumpcloud-private-repo"
+                    >JumpCloud Private Repository</a
+                  >
+                </li>
+                <li>
+                  <a href="https://fleetdm.com/docs/configuration/yaml-files"
+                    >Fleet software/packages in GitOps</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://techzone.omnissa.com/resource/app-management-apple-devices"
+                    >Workspace ONE Apple app management</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://www.hexnode.com/mobile-device-management/help/configuration-profile-reference-for-macos-devices/"
+                    >Hexnode macOS profiles</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://www.manageengine.com/mobile-device-management/help/profile_management/mac/mdm_mac_configuration_profiles.html"
+                    >ManageEngine macOS profiles</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://documentation.meraki.com/Platform_Management/SM_-_Endpoint_Management/Operate_and_Maintain/Apps_and_Software/Installing_Custom_Apps_on_Windows_and_Mac_Devices"
+                    >Meraki custom macOS apps</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://support.apple.com/en-ca/guide/apple-business-essentials/axmcf4de99c4/web"
+                    >Apple Business Essentials custom settings</a
+                  >
+                </li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout">
+            <strong>Planning record</strong>
+            <p>
+              This guide implements the amended MDM plan in TIA-7672. TIA-7685
+              is the P0 blocker for removing fleet-wide token exposure and
+              adding secure headless per-device enrollment. The certificate
+              signer topology and any Network Extension remain Phase-0
+              hypotheses until the required client, recovery, coexistence, and
+              real-device tests pass.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div class="wrap footer-in">
+        <span>Doorman macOS MDM operator guide · design preview</span>
+        <span
+          ><a href="../#/docs">General docs</a> ·
+          <a href="../desktop/">macOS app</a> ·
+          <a href="../#/fleet/mdm">Fleet console</a></span
+        >
+      </div>
+    </footer>
+  </body>
+</html>
