@@ -31,12 +31,6 @@
       link.className = "lpl-ghostlink";
       nav.insertBefore(link, nav.lastElementChild);
     }
-
-    const toc = document.querySelector(".lpl-doc-toc");
-    if (toc && !toc.querySelector('[data-mdm-guide-link="docs-toc"]')) {
-      const link = makeLink("MDM deployment ↗", "docs-toc");
-      toc.append(link);
-    }
   };
 
   const installFleetLink = () => {
@@ -67,14 +61,6 @@
   const style = document.createElement("style");
   style.textContent = `
     a[data-mdm-guide-link] { text-decoration: none; }
-    .lpl-doc-toc a[data-mdm-guide-link] {
-      border: 0;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
-      font: inherit;
-      padding: 0;
-    }
     [data-mdm-guide-slot="fleet"] {
       display: flex;
       justify-content: flex-end;
