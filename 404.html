@@ -5,7 +5,7 @@
     <title>Doorman</title>
     <script>
       (function () {
-        var base = "/doorman-showcase";
+        var base = location.pathname.indexOf("/doorman-showcase") === 0 ? "/doorman-showcase" : "";
         var path = location.pathname;
         if (path.indexOf(base) === 0) path = path.slice(base.length);
         if (!path) path = "/";

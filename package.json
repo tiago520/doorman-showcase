@@ -7,7 +7,7 @@
     "serve": "http-server . -a 127.0.0.1 -p 4173 -c-1",
     "test": "playwright test",
     "test:routes": "playwright test tests/routes.spec.ts",
-    "test:update-snapshots": "playwright test tests/visual.spec.ts --update-snapshots"
+    "test:update-snapshots": "playwright test --update-snapshots"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

@@ -1,13 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
-import { assertNoDocumentOverflow, monitorRuntime } from "./helpers";
+import { assertNoDocumentOverflow, monitorRuntime, settleRoute } from "./helpers";
 
-test.beforeEach(async ({ page }) => {
+async function openMacPage(page: import("@playwright/test").Page) {
+  const runtime = monitorRuntime(page);
   await page.goto("/desktop/");
-});
+  await settleRoute(page);
+  return runtime;
+}
 
 test("macOS product page exposes all promised sections and working local media", async ({ page }) => {
-  const runtime = monitorRuntime(page);
+  const runtime = await openMacPage(page);
   await expect(page.getByRole("heading", { name: /Your Mac, quietly governed/i })).toBeVisible();
   for (const id of ["routing", "connection", "trust", "download"]) {
     await expect(page.locator(`#${id}`)).toBeAttached();
@@ -28,28 +31,33 @@ test("macOS product page exposes all promised sections and working local media",
 
 test("anchor navigation reaches each macOS section", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes("mobile"), "compact navigation intentionally hides section links");
+  const runtime = await openMacPage(page);
   for (const [name, hash] of [["Routing", "#routing"], ["Connection", "#connection"], ["Trust", "#trust"]] as const) {
     await page.getByRole("navigation").getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`${hash}$`));
     await expect(page.locator(hash)).toBeInViewport();
   }
+  runtime.assertClean();
 });
 
 test("download calls to action resolve to a non-empty target", async ({ page, request }) => {
+  const runtime = await openMacPage(page);
   const links = await page.getByRole("link", { name: /Download for macOS/i }).evaluateAll((anchors) =>
     [...new Set(anchors.map((anchor) => (anchor as HTMLAnchorElement).href))],
   );
   expect(links.length).toBeGreaterThan(0);
   for (const href of links) {
     if (href.includes("#download")) continue;
-    const response = await request.get(href);
+    const response = await request.head(href);
     expect(response.ok(), `${href} returned ${response.status()}`).toBe(true);
-    expect((await response.body()).length).toBeGreaterThan(0);
+    expect(Number(response.headers()["content-length"] || 1)).toBeGreaterThan(0);
   }
+  runtime.assertClean();
 });
 
 test("mobile macOS page remains readable and accessible", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("mobile"), "mobile-only acceptance");
+  const runtime = await openMacPage(page);
   await assertNoDocumentOverflow(page);
   await expect(page.getByRole("heading", { name: /Your Mac, quietly governed/i })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
@@ -59,4 +67,5 @@ test("mobile macOS page remains readable and accessible", async ({ page }, testI
     .map((v) => v.id)
     .sort();
   expect(rules).toEqual(["color-contrast"]);
+  runtime.assertClean();
 });

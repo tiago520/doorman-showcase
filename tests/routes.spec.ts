@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { enterDemo, mockControlApi, monitorRuntime, showcasePath } from "./helpers";
+import { enterDemo, mockControlApi, monitorRuntime, settleRoute, showcasePath } from "./helpers";
 
 const PUBLIC_ROUTES = ["/", "/login", "/docs", "/signup", "/forgot", "/sso", "/accept-invite", "/status"];
 
@@ -25,6 +25,7 @@ test.describe("public hash routes", () => {
       expect(response?.ok()).toBe(true);
       await expect(page.locator("#root")).not.toBeEmpty();
       await expect(page.locator("body")).not.toContainText("No door named");
+      await settleRoute(page);
       runtime.assertClean();
     });
   }
@@ -43,6 +44,7 @@ test.describe("authenticated demo route inventory", () => {
       await page.reload();
       await expect(page.locator("body")).not.toContainText("No door named");
       expect(new URL(page.url()).hash).toBe(`#${route}`);
+      await settleRoute(page);
       runtime.assertClean();
     });
   }
@@ -54,5 +56,14 @@ test.describe("authenticated demo route inventory", () => {
     await page.getByRole("button", { name: "Back to the Control Room" }).click();
     await expect(page).toHaveURL(/#\/overview$/);
     await expect(page.locator("body")).not.toContainText("No door named");
+  });
+
+  test("GitHub Pages 404 shim preserves a clean-path route", async ({ page }) => {
+    const response = await page.goto("/close");
+    expect(response?.status()).toBe(404);
+    await expect(page).toHaveURL(/\/#\/close$/);
+    await expect(page.locator("#root")).not.toBeEmpty();
+    await expect(page.locator("body")).not.toContainText("No door named");
+    await settleRoute(page);
   });
 });

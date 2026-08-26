@@ -19,11 +19,13 @@ for (const route of ["/", "/overview", "/requests", "/evals", "/budgets", "/flee
 test("theme preference persists across navigation and reload", async ({ page }) => {
   await enterDemo(page);
   await page.goto(showcasePath("/overview"));
-  const themeControl = page.getByRole("button", { name: /theme|night|daylight/i }).first();
-  if (await themeControl.isVisible().catch(() => false)) await themeControl.click();
-  else await page.evaluate(() => localStorage.setItem("sy.theme", "night"));
+  const themeControl = page.getByRole("button", { name: "Night Shift theme" }).first();
+  await expect(themeControl).toBeVisible();
+  await themeControl.click();
   await page.reload();
   expect(await page.evaluate(() => localStorage.getItem("sy.theme"))).toBe("night");
+  expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("night");
+  await expect(page.getByRole("button", { name: "Daylight theme" }).first()).toBeVisible();
 });
 
 test("keyboard focus is visible on the first interactive control", async ({ page }) => {

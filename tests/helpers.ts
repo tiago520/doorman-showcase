@@ -47,6 +47,16 @@ export function monitorRuntime(page: Page) {
   };
 }
 
+/** Let fetch-driven route components finish their first render before the
+ * runtime monitor is evaluated. Polling pages never become network-idle, so a
+ * bounded animation-frame + task turn is more deterministic than networkidle. */
+export async function settleRoute(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  ));
+  await page.waitForTimeout(300);
+}
+
 export async function assertNoDocumentOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
