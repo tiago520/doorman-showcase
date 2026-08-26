@@ -93,7 +93,10 @@
   .hero-sub { font-size: 17px; color: var(--muted); max-width: 52ch; margin: 0; }
   .hero-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
   .fine { font-size: 12.5px; color: var(--soft); }
-  .fine code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; }
+  .fine code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    overflow-wrap: anywhere; word-break: break-word;
+  }
 
   /* --------------------------- product window -------------------------- */
   .window-wrap { margin: 56px auto 0; }
@@ -221,11 +224,11 @@
     </p>
   </div>
   <div class="hero-ctas">
-    <a class="pill lg" href="#download">Download for macOS</a>
+    <a class="pill lg" href="#download">Preview macOS enrollment</a>
     <a class="quiet lg" href="#routing">See how routing works</a>
   </div>
   <div class="fine" style="margin-top: 14px;">
-    v0.4.1-preview · Apple Silicon · internal preview, unsigned — checksum below
+    v0.4.1-preview · Apple Silicon · private app preview — public enrollment walkthrough below
   </div>
 </header>
 
@@ -317,16 +320,15 @@
 </section>
 
 <section class="wrap download" id="download">
-  <h2>Put your menu bar to work.</h2>
-  <p class="lede">Download the preview, drag it to Applications, and watch the first receipt land.</p>
+  <h2>See how enrollment starts.</h2>
+  <p class="lede">Inspect the public showcase installer and preview the handoff into the private macOS app.</p>
   <div class="dl-row">
-    <a class="pill lg" href="https://github.com/DoormanAI/doorman-desktop/releases/download/v0.4.1-preview.3/doorman-0.4.1-preview.3-arm64.dmg">Download doorman-0.4.1-preview.3 (arm64)</a>
+    <a class="pill lg" href="../downloads/doorman-install.sh" download>Download the macOS showcase installer</a>
     <a class="quiet lg" href="https://tiago520.github.io/doorman-showcase/" target="_blank" rel="noreferrer">Explore the web console</a>
   </div>
   <div class="fine dl-meta">
-    Apple Silicon · internal preview, unsigned — after the first blocked launch use
-    System Settings → Privacy &amp; Security → <b>Open Anyway</b><br />
-    SHA-256 <code>9496972bc458d611fb161dd4e59caa8c76dce01f096d714d24bd031e236031d7</code>
+    Apple Silicon · showcase installer script — the production preview remains private.<br />
+    Review the script before running it; this public build demonstrates the enrollment flow without installing a private binary.
   </div>
 </section>
 
