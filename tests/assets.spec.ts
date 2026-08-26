@@ -19,16 +19,30 @@ test("every locally hosted image, stylesheet, script, and download resolves", as
   }
 });
 
-test("repository-owned static inventory has no broken files", async ({ request }) => {
-  for (const path of [
-    "/", "/404.html", "/desktop/", "/downloads/doorman-install.sh", "/downloads/switchyard-install.sh",
+test("repository-owned static inventory has no broken files", async ({ page, request }) => {
+  const images = [
     "/desktop/previews/control-center.png", "/desktop/previews/apps-routing.png", "/desktop/previews/connection-healthy.png",
     "/desktop/previews/preferences.png", "/desktop/previews/setup-welcome.png", "/desktop/previews/setup-ready.png",
     "/shots/control-room-day.png", "/shots/control-room-night.png",
+  ];
+  for (const path of [
+    "/", "/404.html", "/desktop/", "/downloads/doorman-install.sh", "/downloads/switchyard-install.sh", ...images,
   ]) {
     const response = await request.get(path);
     expect(response.ok(), `${path} returned ${response.status()}`).toBe(true);
     expect((await response.body()).length, `${path} was empty`).toBeGreaterThan(0);
+  }
+
+  await page.goto("/");
+  for (const path of images) {
+    const dimensions = await page.evaluate(async (src) => {
+      const image = new Image();
+      image.src = src;
+      await image.decode();
+      return { width: image.naturalWidth, height: image.naturalHeight };
+    }, path);
+    expect(dimensions.width, `${path} did not decode to a visible image`).toBeGreaterThan(0);
+    expect(dimensions.height, `${path} did not decode to a visible image`).toBeGreaterThan(0);
   }
 });
 

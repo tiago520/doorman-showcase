@@ -5,13 +5,13 @@ const PUBLIC_ROUTES = ["/", "/login", "/docs", "/signup", "/forgot", "/sso", "/a
 
 const DEMO_ROUTES = [
   "/welcome",
-  "/overview", "/requests", "/live", "/tasks", "/prs", "/routing", "/route-preview", "/replay", "/models",
+  "/overview", "/requests", "/requests/1", "/live", "/tasks", "/tasks/1", "/prs", "/routing", "/route-preview", "/replay", "/models",
   "/evals", "/evals/experiments", "/evals/model-fit", "/evals/annotate",
   "/spend", "/savings", "/chargeback", "/close", "/spend/consolidation", "/spend/commitments",
   "/budgets", "/budgets/controls", "/budgets/reservations",
   "/guardrails", "/guardrails/data", "/guardrails/agents", "/guardrails/adversarial",
   "/keys", "/keys/security", "/keys/vault", "/keys/tokens",
-  "/fleet", "/fleet/tools", "/fleet/shadow", "/fleet/setup", "/fleet/mdm", "/fleet/devices", "/fleet/deploy", "/fleet/trust",
+  "/fleet", "/fleet/mac-miles-mbp14", "/fleet/tools", "/fleet/shadow", "/fleet/setup", "/fleet/mdm", "/fleet/devices", "/fleet/devices/1", "/fleet/deploy", "/fleet/trust",
   "/compliance", "/compliance/audit", "/compliance/config", "/compliance/trust", "/compliance/incidents", "/compliance/sustainability",
   "/org/members", "/org/departments", "/org/identity", "/org/integrations", "/org/settings", "/org/billing",
   "/ops/health", "/ops/quality", "/ops/metrics", "/account",

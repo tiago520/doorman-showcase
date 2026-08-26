@@ -9,9 +9,9 @@ import { enterDemo, settleRoute, showcasePath } from "./helpers";
 const KNOWN_DEBT: Record<string, Record<string, number>> = {
   "/": { "color-contrast": 5 },
   "/overview": { "color-contrast": 50, "link-in-text-block": 2, "svg-img-alt": 2 },
-  "/requests": { "color-contrast": 20, "select-name": 2 },
-  "/evals": { "color-contrast": 30 },
-  "/budgets": { "color-contrast": 30 },
+  "/requests": { "color-contrast": 1200, "select-name": 2 },
+  "/evals": { "color-contrast": 40 },
+  "/budgets": { "color-contrast": 65 },
   "/guardrails": { "color-contrast": 20 },
   "/fleet": { "color-contrast": 100 },
   "/compliance": { "button-name": 1, "color-contrast": 20 },
@@ -43,13 +43,7 @@ function expectWithinKnownDebt(actual: Record<string, number>, route: string): v
   for (const [rule, count] of Object.entries(actual)) {
     const ceiling = budget[rule] ?? CROSS_ROUTE_DEBT[rule];
     expect(ceiling, `${route}: ${rule} is new, unbudgeted accessibility debt`).toBeDefined();
-    // Sample-data tables can render from tens to thousands of contrast nodes
-    // depending on when Axe snapshots their async population. Presence is
-    // still detected and allowlisted; deterministic structural rules remain
-    // count-capped so real regressions fail the gate.
-    if (rule !== "color-contrast") {
-      expect(count, `${route}: ${rule} exceeded its known-debt budget`).toBeLessThanOrEqual(ceiling!);
-    }
+    expect(count, `${route}: ${rule} exceeded its known-debt budget`).toBeLessThanOrEqual(ceiling!);
   }
 }
 
