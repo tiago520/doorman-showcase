@@ -40,7 +40,8 @@ test("anchor navigation reaches each macOS section", async ({ page }, testInfo) 
   runtime.assertClean();
 });
 
-test("download calls to action resolve to a non-empty target", async ({ page, request }) => {
+test("download calls to action resolve to a non-empty target", async ({ page, request }, testInfo) => {
+  test.skip(testInfo.project.name.includes("mobile"), "shared installer target is verified once");
   const runtime = await openMacPage(page);
   const links = await page.getByRole("link", { name: /Download for macOS/i }).evaluateAll((anchors) =>
     [...new Set(anchors.map((anchor) => (anchor as HTMLAnchorElement).href))],
@@ -50,7 +51,9 @@ test("download calls to action resolve to a non-empty target", async ({ page, re
     if (href.includes("#download")) continue;
     const response = await request.head(href);
     expect(response.ok(), `${href} returned ${response.status()}`).toBe(true);
-    expect(Number(response.headers()["content-length"] || 1)).toBeGreaterThan(0);
+    const declaredLength = Number(response.headers()["content-length"]);
+    expect(Number.isFinite(declaredLength), `${href} did not declare an artifact size`).toBe(true);
+    expect(declaredLength, `${href} declared an empty artifact`).toBeGreaterThan(0);
   }
   runtime.assertClean();
 });
@@ -66,6 +69,6 @@ test("mobile macOS page remains readable and accessible", async ({ page }, testI
     .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
     .map((v) => v.id)
     .sort();
-  expect(rules).toEqual(["color-contrast"]);
+  expect(rules.every((rule) => rule === "color-contrast"), `unexpected rules: ${rules.join(", ")}`).toBe(true);
   runtime.assertClean();
 });

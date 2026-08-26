@@ -51,10 +51,13 @@ export function monitorRuntime(page: Page) {
  * runtime monitor is evaluated. Polling pages never become network-idle, so a
  * bounded animation-frame + task turn is more deterministic than networkidle. */
 export async function settleRoute(page: Page): Promise<void> {
+  // `load` does not include fetch-driven route content. Playwright's
+  // network-idle window observes arbitrarily slow initial requests instead of
+  // guessing a fixed delay; periodic pollers still leave a 500 ms quiet gap.
+  await page.waitForLoadState("networkidle");
   await page.evaluate(() => new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   ));
-  await page.waitForTimeout(300);
 }
 
 export async function assertNoDocumentOverflow(page: Page): Promise<void> {
@@ -70,7 +73,7 @@ export async function assertBoundedDesktopCanvas(page: Page, maximumWidth = 1000
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
   }));
-  expect(dimensions.scrollWidth).toBeGreaterThanOrEqual(dimensions.clientWidth);
+  expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(maximumWidth);
 }
 

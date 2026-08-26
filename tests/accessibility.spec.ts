@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
-import { enterDemo, showcasePath } from "./helpers";
+import { enterDemo, settleRoute, showcasePath } from "./helpers";
 
 // The showcase repository publishes a compiled artifact; its source-side a11y
 // remediation is tracked separately. Keep the current debt explicit and
@@ -57,6 +57,7 @@ for (const route of ["/", "/overview", "/requests", "/evals", "/budgets", "/guar
   test(`${route} has no serious or critical automated accessibility violations`, async ({ page }) => {
     await enterDemo(page);
     await page.goto(showcasePath(route));
+    await settleRoute(page);
     expectWithinKnownDebt(await blockingA11yCounts(page), route);
   });
 }

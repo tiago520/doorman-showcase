@@ -4,6 +4,7 @@ import { enterDemo, mockControlApi, monitorRuntime, settleRoute, showcasePath } 
 const PUBLIC_ROUTES = ["/", "/login", "/docs", "/signup", "/forgot", "/sso", "/accept-invite", "/status"];
 
 const DEMO_ROUTES = [
+  "/welcome",
   "/overview", "/requests", "/live", "/tasks", "/prs", "/routing", "/route-preview", "/replay", "/models",
   "/evals", "/evals/experiments", "/evals/model-fit", "/evals/annotate",
   "/spend", "/savings", "/chargeback", "/close", "/spend/consolidation", "/spend/commitments",
