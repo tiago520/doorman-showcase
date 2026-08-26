@@ -43,18 +43,13 @@ test("anchor navigation reaches each macOS section", async ({ page }, testInfo) 
 test("download calls to action resolve to a non-empty target", async ({ page, request }, testInfo) => {
   test.skip(testInfo.project.name.includes("mobile"), "shared installer target is verified once");
   const runtime = await openMacPage(page);
-  const links = await page.getByRole("link", { name: /Download for macOS/i }).evaluateAll((anchors) =>
-    [...new Set(anchors.map((anchor) => (anchor as HTMLAnchorElement).href))],
-  );
-  expect(links.length).toBeGreaterThan(0);
-  for (const href of links) {
-    if (href.includes("#download")) continue;
-    const response = await request.head(href);
-    expect(response.ok(), `${href} returned ${response.status()}`).toBe(true);
-    const declaredLength = Number(response.headers()["content-length"]);
-    expect(Number.isFinite(declaredLength), `${href} did not declare an artifact size`).toBe(true);
-    expect(declaredLength, `${href} declared an empty artifact`).toBeGreaterThan(0);
-  }
+  const download = page.locator("#download a[download]");
+  await expect(download).toHaveCount(1);
+  const href = await download.getAttribute("href");
+  expect(href).toBeTruthy();
+  const response = await request.get(new URL(href!, page.url()).href);
+  expect(response.ok(), `${href} returned ${response.status()}`).toBe(true);
+  expect((await response.body()).length, `${href} was empty`).toBeGreaterThan(0);
   runtime.assertClean();
 });
 
@@ -65,10 +60,10 @@ test("mobile macOS page remains readable and accessible", async ({ page }, testI
   await expect(page.getByRole("heading", { name: /Your Mac, quietly governed/i })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   const results = await new AxeBuilder({ page }).analyze();
-  const rules = results.violations
-    .filter((v) => ["serious", "critical"].includes(v.impact ?? ""))
-    .map((v) => v.id)
-    .sort();
-  expect(rules.every((rule) => rule === "color-contrast"), `unexpected rules: ${rules.join(", ")}`).toBe(true);
+  const blocking = results.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""));
+  const unexpected = blocking.filter((violation) => violation.id !== "color-contrast");
+  expect(unexpected.map((violation) => violation.id), "mobile introduced a new serious/critical rule").toEqual([]);
+  const contrastNodes = blocking.find((violation) => violation.id === "color-contrast")?.nodes.length ?? 0;
+  expect(contrastNodes, "mobile contrast debt exceeded its bounded baseline").toBeLessThanOrEqual(10);
   runtime.assertClean();
 });

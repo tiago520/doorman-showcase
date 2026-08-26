@@ -9,23 +9,26 @@ import { enterDemo, settleRoute, showcasePath } from "./helpers";
 const KNOWN_DEBT: Record<string, Record<string, number>> = {
   "/": { "color-contrast": 5 },
   "/overview": { "color-contrast": 50, "link-in-text-block": 2, "svg-img-alt": 2 },
-  "/requests": { "color-contrast": 1200, "select-name": 2 },
+  "/requests": { "color-contrast": 1150, "select-name": 2 },
   "/evals": { "color-contrast": 40 },
-  "/budgets": { "color-contrast": 65 },
+  "/spend": { "color-contrast": 70, "select-name": 3 },
+  "/budgets": { "color-contrast": 65, label: 4 },
   "/guardrails": { "color-contrast": 20 },
+  "/keys": { "color-contrast": 45 },
   "/fleet": { "color-contrast": 100 },
   "/compliance": { "button-name": 1, "color-contrast": 20 },
+  "/org/members": { "color-contrast": 55, "select-name": 13 },
+  "/ops/health": { "color-contrast": 85 },
   "/account": { "color-contrast": 25 },
   "/desktop/": { "color-contrast": 10 },
 };
 
 // Chromium's font metrics can create a focusable-scroll-region finding only
-// on hosted Linux, and several compiled forms still have unlabeled controls.
-// Keep those debts capped globally instead of forcing a resolved historical
-// rule to remain present forever.
+// on hosted Linux. Keep that renderer-dependent debt capped globally instead
+// of forcing a resolved historical rule to remain present forever. Form-label
+// debt is budgeted on the exact route that owns it above.
 const CROSS_ROUTE_DEBT: Record<string, number> = {
   "scrollable-region-focusable": 5,
-  label: 5,
 };
 
 async function blockingA11yCounts(page: import("@playwright/test").Page) {
@@ -47,7 +50,10 @@ function expectWithinKnownDebt(actual: Record<string, number>, route: string): v
   }
 }
 
-for (const route of ["/", "/overview", "/requests", "/evals", "/budgets", "/guardrails", "/fleet", "/compliance", "/account"]) {
+for (const route of [
+  "/", "/overview", "/requests", "/evals", "/spend", "/budgets", "/guardrails", "/keys", "/fleet", "/compliance",
+  "/org/members", "/ops/health", "/account",
+]) {
   test(`${route} has no serious or critical automated accessibility violations`, async ({ page }) => {
     await enterDemo(page);
     await page.goto(showcasePath(route));

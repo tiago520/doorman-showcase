@@ -16,6 +16,7 @@ test("every locally hosted image, stylesheet, script, and download resolves", as
   for (const url of new Set(urls)) {
     const response = await request.get(url);
     expect(response.ok(), `${url} returned ${response.status()}`).toBe(true);
+    expect((await response.body()).length, `${url} was empty`).toBeGreaterThan(0);
   }
 });
 
@@ -24,6 +25,10 @@ test("repository-owned static inventory has no broken files", async ({ page, req
     "/desktop/previews/control-center.png", "/desktop/previews/apps-routing.png", "/desktop/previews/connection-healthy.png",
     "/desktop/previews/preferences.png", "/desktop/previews/setup-welcome.png", "/desktop/previews/setup-ready.png",
     "/shots/control-room-day.png", "/shots/control-room-night.png",
+    "/shots/crop-attention-day.png", "/shots/crop-attention.png",
+    "/shots/crop-budgets-day.png", "/shots/crop-budgets.png",
+    "/shots/crop-savings-day.png", "/shots/crop-savings.png",
+    "/shots/crop-team-day.png", "/shots/requests-day.png", "/shots/requests-night.png",
   ];
   for (const path of [
     "/", "/404.html", "/desktop/", "/downloads/doorman-install.sh", "/downloads/switchyard-install.sh", ...images,
