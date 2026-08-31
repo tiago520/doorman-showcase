@@ -31,7 +31,8 @@ test("repository-owned static inventory has no broken files", async ({ page, req
     "/shots/crop-team-day.png", "/shots/requests-day.png", "/shots/requests-night.png",
   ];
   for (const path of [
-    "/", "/404.html", "/desktop/", "/downloads/doorman-install.sh", "/downloads/switchyard-install.sh", ...images,
+    "/", "/404.html", "/desktop/", "/mdm/", "/mdm-links.js",
+    "/downloads/doorman-install.sh", "/downloads/switchyard-install.sh", ...images,
   ]) {
     const response = await request.get(path);
     expect(response.ok(), `${path} returned ${response.status()}`).toBe(true);
