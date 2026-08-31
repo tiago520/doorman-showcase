@@ -66,6 +66,11 @@
       justify-content: flex-end;
       margin-bottom: 10px;
     }
+    @media (max-width: 640px) {
+      .lpl-nav-links a[data-mdm-guide-link="docs-nav"] {
+        display: inline-flex;
+      }
+    }
   `;
   document.head.append(style);
 

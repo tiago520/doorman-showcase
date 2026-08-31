@@ -49,3 +49,12 @@ test("MDM guide has no serious accessibility violations or horizontal overflow",
   expect(blocking, blocking.map((violation) => violation.id).join(", ")).toEqual([]);
   await assertNoDocumentOverflow(page);
 });
+
+test("Docs keeps the MDM guide discoverable on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#/docs");
+  const guideLink = page.locator('[data-mdm-guide-link="docs-nav"]');
+  await expect(guideLink).toBeVisible();
+  await expect(guideLink).toHaveAttribute("href", /\/mdm\/$/);
+  await assertNoDocumentOverflow(page);
+});
